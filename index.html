@@ -36,11 +36,24 @@
             word-wrap: break-word;
             font-size: 14px;
         }
+        #start-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            font-size: 20px;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div id="game-container">
         <canvas id="pong" width="800" height="400"></canvas>
+        <button id="start-button">Start Game</button>
     </div>
     <div id="code-container">
         <pre id="code-display"></pre>
