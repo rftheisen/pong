@@ -5,6 +5,37 @@ const startButton = document.getElementById('start-button');
 
 let gameInterval;
 
+// Create the user paddle
+const user = {
+    x: 0,
+    y: canvas.height / 2 - 50,
+    width: 10,
+    height: 100, // Temporary initial value
+    color: 'WHITE',
+    score: 0
+};
+
+// Create the computer paddle
+const com = {
+    x: canvas.width - 10,
+    y: canvas.height / 2 - 50,
+    width: 10,
+    height: 100, // Temporary initial value
+    color: 'WHITE',
+    score: 0
+};
+
+// Create the ball
+const ball = {
+    x: canvas.width / 2,
+    y: canvas.height / 2,
+    radius: 10,
+    speed: 5,
+    velocityX: 5,
+    velocityY: 5,
+    color: 'WHITE'
+};
+
 // Set canvas dimensions with a fixed aspect ratio
 function setCanvasDimensions() {
     let aspectRatio = 2; // Width-to-height ratio (e.g., 2:1)
@@ -39,37 +70,6 @@ window.addEventListener('resize', setCanvasDimensions);
 // Load sound
 const hitSound = new Audio('hit.mp3');
 hitSound.load();
-
-// Create the user paddle
-const user = {
-    x: 0,
-    y: canvas.height / 2 - 50,
-    width: 10,
-    height: canvas.height / 5, // Paddle height relative to canvas height
-    color: 'WHITE',
-    score: 0
-};
-
-// Create the computer paddle
-const com = {
-    x: canvas.width - 10,
-    y: canvas.height / 2 - 50,
-    width: 10,
-    height: canvas.height / 5, // Paddle height relative to canvas height
-    color: 'WHITE',
-    score: 0
-};
-
-// Create the ball
-const ball = {
-    x: canvas.width / 2,
-    y: canvas.height / 2,
-    radius: 10,
-    speed: 5,
-    velocityX: 5,
-    velocityY: 5,
-    color: 'WHITE'
-};
 
 // Function to display code
 function displayCode(code) {
