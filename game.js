@@ -180,4 +180,57 @@ function update() {
     let player = (ball.x + ball.radius < canvas.width / 2) ? user : com;
 
     if (collision(ball, player)) {
-        // Play hit
+        // Play hit sound
+        hitSound.currentTime = 0; // Rewind the sound to the start
+        hitSound.play();
+        displayCode(`hitSound.play();`);
+
+        // We check where the ball hit the paddle
+        let collidePoint = (ball.y - (player.y + player.height / 2));
+        // Normalize the value
+        collidePoint = collidePoint / (player.height / 2);
+        // When the ball hits the paddle, we want the ball to take a different angle
+        let angleRad = (Math.PI / 4) * collidePoint;
+
+        // Change the X and Y velocity direction
+        let direction = (ball.x + ball.radius < canvas.width / 2) ? 1 : -1;
+        ball.velocityX = direction * ball.speed * Math.cos(angleRad);
+        ball.velocityY = ball.speed * Math.sin(angleRad);
+
+        // Speed up the ball every time a paddle hits it
+        ball.speed += 0.5;
+        displayCode(`ball.speed += 0.5;`);
+    }
+}
+
+// Render the game
+function render() {
+    // Clear the canvas
+    drawRect(0, 0, canvas.width, canvas.height, 'BLACK');
+
+    // Draw the net
+    drawNet();
+
+    // Draw the score
+    drawText(user.score, canvas.width / 4, canvas.height / 5, 'WHITE');
+    drawText(com.score, 3 * canvas.width / 4, canvas.height / 5, 'WHITE');
+
+    // Draw the paddles
+    drawRect(user.x, user.y, user.width, user.height, user.color);
+    drawRect(com.x, com.y, com.width, com.height, com.color);
+
+    // Draw the ball
+    drawCircle(ball.x, ball.y, ball.radius, ball.color);
+}
+
+// Game loop
+function game() {
+    update();
+    render();
+}
+
+// Frames per second
+const framePerSecond = 50;
+
+// Call the game function 50 times every 1 second
+setInterval(game, 1000 / framePerSecond);
