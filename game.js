@@ -77,7 +77,6 @@ function displayCode(code) {
 function drawRect(x, y, w, h, color) {
     context.fillStyle = color;
     context.fillRect(x, y, w, h);
-    displayCode(`drawRect(${x}, ${y}, ${w}, ${h}, '${color}');`);
 }
 
 // Draw a circle, will be used to draw the ball
@@ -87,7 +86,6 @@ function drawCircle(x, y, r, color) {
     context.arc(x, y, r, 0, Math.PI * 2, false);
     context.closePath();
     context.fill();
-    displayCode(`drawCircle(${x}, ${y}, ${r}, '${color}');`);
 }
 
 // Draw the net
@@ -95,7 +93,6 @@ function drawNet() {
     for (let i = 0; i <= canvas.height; i += 15) {
         drawRect(canvas.width / 2 - 1, i, 2, 10, 'WHITE');
     }
-    displayCode(`drawNet();`);
 }
 
 // Draw text
@@ -103,7 +100,6 @@ function drawText(text, x, y, color) {
     context.fillStyle = color;
     context.font = '45px Arial';
     context.fillText(text, x, y);
-    displayCode(`drawText('${text}', ${x}, ${y}, '${color}');`);
 }
 
 // Control the user paddle with mouse
@@ -111,7 +107,6 @@ canvas.addEventListener('mousemove', movePaddle);
 function movePaddle(evt) {
     let rect = canvas.getBoundingClientRect();
     user.y = evt.clientY - rect.top - user.height / 2;
-    displayCode(`movePaddle(evt);`);
 }
 
 // Control the user paddle with touch
@@ -121,7 +116,6 @@ function movePaddleTouch(evt) {
     let rect = canvas.getBoundingClientRect();
     let touch = evt.touches[0]; // Get the first touch point
     user.y = touch.clientY - rect.top - user.height / 2;
-    displayCode(`movePaddleTouch(evt);`);
 }
 
 // Collision detection
@@ -136,9 +130,7 @@ function collision(b, p) {
     b.left = b.x - b.radius;
     b.right = b.x + b.radius;
 
-    const isColliding = p.left < b.right && p.top < b.bottom && p.right > b.left && p.bottom > b.top;
-    displayCode(`collision(ball, paddle) => ${isColliding}`);
-    return isColliding;
+    return p.left < b.right && p.top < b.bottom && p.right > b.left && p.bottom > b.top;
 }
 
 // Reset the ball
@@ -147,7 +139,6 @@ function resetBall() {
     ball.y = canvas.height / 2;
     ball.speed = 5;
     ball.velocityX = -ball.velocityX;
-    displayCode(`resetBall();`);
 }
 
 // Update: position, movement, score...
@@ -164,16 +155,13 @@ function update() {
     // Ball movement
     ball.x += ball.velocityX;
     ball.y += ball.velocityY;
-    displayCode(`ball.x += ${ball.velocityX}; ball.y += ${ball.velocityY};`);
 
     // Simple AI to control the computer paddle
     com.y += ((ball.y - (com.y + com.height / 2))) * 0.1;
-    displayCode(`com.y += ((ball.y - (com.y + com.height / 2))) * 0.1;`);
 
     // When the ball collides with bottom and top walls, we inverse the y velocity
     if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
         ball.velocityY = -ball.velocityY;
-        displayCode(`ball.velocityY = -ball.velocityY;`);
     }
 
     // Check if the paddle hit the user or computer paddle
@@ -183,7 +171,6 @@ function update() {
         // Play hit sound
         hitSound.currentTime = 0; // Rewind the sound to the start
         hitSound.play();
-        displayCode(`hitSound.play();`);
 
         // We check where the ball hit the paddle
         let collidePoint = (ball.y - (player.y + player.height / 2));
@@ -199,7 +186,6 @@ function update() {
 
         // Speed up the ball every time a paddle hits it
         ball.speed += 0.5;
-        displayCode(`ball.speed += 0.5;`);
     }
 }
 
@@ -234,3 +220,6 @@ const framePerSecond = 50;
 
 // Call the game function 50 times every 1 second
 setInterval(game, 1000 / framePerSecond);
+
+// Initial call to check if the displayCode function works
+displayCode("Game Initialized");
