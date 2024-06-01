@@ -204,4 +204,29 @@ function render() {
     // Clear the canvas
     drawRect(0, 0, canvas.width, canvas.height, 'BLACK');
 
-    //
+    // Draw the net
+    drawNet();
+
+    // Draw the score
+    drawText(user.score, canvas.width / 4, canvas.height / 5, 'WHITE');
+    drawText(com.score, 3 * canvas.width / 4, canvas.height / 5, 'WHITE');
+
+    // Draw the paddles
+    drawRect(user.x, user.y, user.width, user.height, user.color);
+    drawRect(com.x, com.y, com.width, com.height, com.color);
+
+    // Draw the ball
+    drawCircle(ball.x, ball.y, ball.radius, ball.color);
+}
+
+// Game loop
+function game() {
+    update();
+    render();
+}
+
+// Frames per second
+const framePerSecond = 50;
+
+// Call the game function 50 times every 1 second
+setInterval(game, 1000 / framePerSecond);
