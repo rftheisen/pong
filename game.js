@@ -1,6 +1,9 @@
 const canvas = document.getElementById('pong');
 const context = canvas.getContext('2d');
 const codeDisplay = document.getElementById('code-display');
+const startButton = document.getElementById('start-button');
+
+let gameInterval;
 
 // Set canvas dimensions with a fixed aspect ratio
 function setCanvasDimensions() {
@@ -231,12 +234,4 @@ function render() {
 function game() {
     update();
     render();
-    displayCode("game() { update(); render(); }");
-}
-
-// Frames per second
-const framePerSecond = 50;
-
-// Call the game function 50 times every 1 second
-setInterval(game, 1000 / framePerSecond);
-displayCode("setInterval(game, 1000 / framePerSecond);");
+    displayCode("game() { update(); render(); }
