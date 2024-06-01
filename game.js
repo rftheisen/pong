@@ -1,6 +1,18 @@
 const canvas = document.getElementById('pong');
 const context = canvas.getContext('2d');
 
+// Set canvas dimensions
+function setCanvasDimensions() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
+// Initial canvas dimensions setup
+setCanvasDimensions();
+
+// Adjust canvas dimensions on window resize
+window.addEventListener('resize', setCanvasDimensions);
+
 // Load sound
 const hitSound = new Audio('hit.mp3');
 hitSound.load();
@@ -106,6 +118,11 @@ function resetBall() {
 
 // Update: position, movement, score...
 function update() {
+    // Update paddle positions based on canvas dimensions
+    user.height = canvas.height / 5;
+    com.height = canvas.height / 5;
+    com.x = canvas.width - com.width;
+
     // Update the score
     if (ball.x - ball.radius < 0) {
         com.score++;
