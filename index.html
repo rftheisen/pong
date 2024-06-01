@@ -13,38 +13,13 @@
             height: 100vh;
             background-color: #000;
         }
-        #game-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex: 1;
-        }
         canvas {
             border: 1px solid #fff;
-        }
-        #code-container {
-            width: 400px;
-            padding: 10px;
-            overflow-y: auto;
-            background-color: #222;
-            border-left: 1px solid #fff;
-            color: white;
-            font-family: Arial, sans-serif;
-        }
-        pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            font-size: 14px;
         }
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="pong"></canvas>
-    </div>
-    <div id="code-container">
-        <pre id="code-display"></pre>
-    </div>
+    <canvas id="pong" width="800" height="400"></canvas>
     <script src="game.js"></script>
 </body>
 </html>
