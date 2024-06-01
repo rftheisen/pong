@@ -1,10 +1,20 @@
 const canvas = document.getElementById('pong');
 const context = canvas.getContext('2d');
 
-// Set canvas dimensions
+// Set canvas dimensions with a fixed aspect ratio
 function setCanvasDimensions() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    let aspectRatio = 2; // Width-to-height ratio (e.g., 2:1)
+    let height = window.innerHeight * 0.8; // Use 80% of the window height
+    let width = height * aspectRatio;
+
+    // Ensure canvas fits within the window dimensions
+    if (width > window.innerWidth * 0.9) {
+        width = window.innerWidth * 0.9;
+        height = width / aspectRatio;
+    }
+
+    canvas.width = width;
+    canvas.height = height;
 }
 
 // Initial canvas dimensions setup
@@ -22,7 +32,7 @@ const user = {
     x: 0,
     y: canvas.height / 2 - 50,
     width: 10,
-    height: 100,
+    height: canvas.height / 5, // Paddle height relative to canvas height
     color: 'WHITE',
     score: 0
 };
@@ -32,7 +42,7 @@ const com = {
     x: canvas.width - 10,
     y: canvas.height / 2 - 50,
     width: 10,
-    height: 100,
+    height: canvas.height / 5, // Paddle height relative to canvas height
     color: 'WHITE',
     score: 0
 };
@@ -118,7 +128,7 @@ function resetBall() {
 
 // Update: position, movement, score...
 function update() {
-    // Update paddle positions based on canvas dimensions
+    // Adjust paddle sizes and positions based on canvas dimensions
     user.height = canvas.height / 5;
     com.height = canvas.height / 5;
     com.x = canvas.width - com.width;
