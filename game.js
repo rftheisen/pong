@@ -2,7 +2,6 @@ const canvas = document.getElementById('pong');
 const context = canvas.getContext('2d');
 const codeDisplay = document.getElementById('code-display');
 
-// Set canvas dimensions with a fixed aspect ratio
 function setCanvasDimensions() {
     let aspectRatio = 2; // Width-to-height ratio (e.g., 2:1)
     let height = window.innerHeight * 0.8; // Use 80% of the window height
