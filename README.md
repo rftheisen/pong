@@ -4,3 +4,5 @@ A fun game to keep your mind active and learn how web apps work.
 
 The code associated with each action is displayed in the grey text box on the right side of the screen.
 
+Play the game here: https://rftheisen.github.io/pong/
+
