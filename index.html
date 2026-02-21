@@ -5,58 +5,121 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pong Game</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #000;
+            background: #0d0b1e;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
         }
+
         #game-container {
             display: flex;
             justify-content: center;
             align-items: center;
             flex: 1;
+            position: relative;
         }
+
         canvas {
-            border: 1px solid #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 40px rgba(129, 140, 248, 0.15), 0 0 80px rgba(129, 140, 248, 0.05);
         }
+
+        /* ── Code panel ────────────────────────────────────────────────── */
         #code-container {
-            width: 400px;
-            padding: 10px;
-            overflow-y: auto;
-            background-color: #222;
-            border-left: 1px solid #fff;
-            color: white;
-            font-family: Arial, sans-serif;
+            width: 300px;
+            min-width: 300px;
+            height: 100vh;
+            padding: 0;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
         }
+
+        #code-header {
+            padding: 12px 16px 10px;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            color: rgba(255, 255, 255, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        #code-body {
+            padding: 16px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
         pre {
+            margin: 0;
             white-space: pre-wrap;
             word-wrap: break-word;
-            font-size: 14px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.65);
         }
+
+        /* Syntax highlighting */
+        .kw  { color: #818cf8; }
+        .num { color: #34d399; }
+        .str { color: #fbbf24; }
+
+        /* ── Start button ──────────────────────────────────────────────── */
         #start-button {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            padding: 20px;
-            font-size: 20px;
-            background-color: #444;
+            padding: 14px 36px;
+            font-size: 18px;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.06em;
+            background: rgba(129, 140, 248, 0.15);
             color: #fff;
-            border: none;
+            border: 1px solid rgba(129, 140, 248, 0.5);
+            border-radius: 10px;
             cursor: pointer;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 0 24px rgba(129, 140, 248, 0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+            transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+        }
+
+        #start-button:hover {
+            background: rgba(129, 140, 248, 0.28);
+            box-shadow: 0 0 40px rgba(129, 140, 248, 0.55), inset 0 1px 0 rgba(255,255,255,0.15);
+            transform: translate(-50%, -50%) scale(1.03);
+        }
+
+        #start-button:active {
+            transform: translate(-50%, -50%) scale(0.98);
         }
     </style>
 </head>
 <body>
     <div id="game-container">
         <canvas id="pong" width="800" height="400"></canvas>
-        <button id="start-button">Start Game</button>
+        <button id="start-button">▶ Start Game</button>
     </div>
     <div id="code-container">
-        <pre id="code-display"></pre>
+        <div id="code-header">▶ Code running</div>
+        <div id="code-body">
+            <pre id="code-display"></pre>
+        </div>
     </div>
     <script src="game.js"></script>
 </body>

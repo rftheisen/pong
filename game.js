@@ -5,13 +5,23 @@ const startButton = document.getElementById('start-button');
 
 let gameInterval;
 
+// ── Color palette ────────────────────────────────────────────────────────────
+const PLAYER_COLOR = '#818cf8';
+const PLAYER_GLOW  = 'rgba(129,140,248,0.85)';
+const AI_COLOR     = '#f472b6';
+const AI_GLOW      = 'rgba(244,114,182,0.85)';
+const BALL_COLOR   = '#e0e0ff';
+const BALL_GLOW    = 'rgba(210,210,255,0.95)';
+const NET_COLOR    = 'rgba(255,255,255,0.15)';
+const SCORE_COLOR  = 'rgba(255,255,255,0.7)';
+
 // Create the user paddle
 const user = {
     x: 0,
     y: canvas.height / 2 - 50,
     width: 10,
-    height: 100, // Temporary initial value
-    color: 'WHITE',
+    height: 100,
+    color: PLAYER_COLOR,
     score: 0
 };
 
@@ -20,8 +30,8 @@ const com = {
     x: canvas.width - 10,
     y: canvas.height / 2 - 50,
     width: 10,
-    height: 100, // Temporary initial value
-    color: 'WHITE',
+    height: 100,
+    color: AI_COLOR,
     score: 0
 };
 
@@ -33,133 +43,184 @@ const ball = {
     speed: 5,
     velocityX: 5,
     velocityY: 5,
-    color: 'WHITE'
+    color: BALL_COLOR
 };
 
-// Set canvas dimensions with a fixed aspect ratio
+// Ball trail
+const trail = [];
+const TRAIL_LENGTH = 8;
+
+// ── Canvas sizing ─────────────────────────────────────────────────────────────
+const CODE_PANEL_W = 300; // must match #code-container width in CSS
+
 function setCanvasDimensions() {
-    let aspectRatio = 2; // Width-to-height ratio (e.g., 2:1)
-    let height = window.innerHeight * 0.8; // Use 80% of the window height
+    let aspectRatio = 2;
+    let height = window.innerHeight * 0.85;
     let width = height * aspectRatio;
 
-    // Ensure canvas fits within the window dimensions
-    if (width > window.innerWidth * 0.9) {
-        width = window.innerWidth * 0.9;
+    // Cap width to available space (viewport minus the code panel)
+    const maxW = (window.innerWidth - CODE_PANEL_W) * 0.97;
+    if (width > maxW) {
+        width = maxW;
         height = width / aspectRatio;
     }
 
     canvas.width = width;
     canvas.height = height;
 
-    // Adjust paddle positions based on new canvas dimensions
     user.height = canvas.height / 5;
-    com.height = canvas.height / 5;
+    com.height  = canvas.height / 5;
     user.y = canvas.height / 2 - user.height / 2;
-    com.y = canvas.height / 2 - com.height / 2;
-    com.x = canvas.width - com.width;
+    com.y  = canvas.height / 2 - com.height  / 2;
+    com.x  = canvas.width - com.width;
     ball.x = canvas.width / 2;
     ball.y = canvas.height / 2;
 }
 
-// Initial canvas dimensions setup
 setCanvasDimensions();
-
-// Adjust canvas dimensions on window resize
 window.addEventListener('resize', setCanvasDimensions);
 
 // Load sound
 const hitSound = new Audio('hit.mp3');
 hitSound.load();
 
-// Function to display code
+// ── Syntax-highlighted code display ──────────────────────────────────────────
+function syntaxHighlight(code) {
+    return code
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\b(function|const|let|var|if|else|return|Math|true|false|new|for)\b/g,
+                 '<span class="kw">$1</span>')
+        .replace(/\b(\d+\.?\d*)\b/g, '<span class="num">$1</span>')
+        .replace(/'([^']*)'/g, "<span class='str'>'$1'</span>");
+}
+
 function displayCode(code) {
-    if (codeDisplay) {
-        codeDisplay.textContent = code;
-    } else {
-        console.error("codeDisplay element not found");
-    }
+    if (codeDisplay) codeDisplay.innerHTML = syntaxHighlight(code);
 }
 
-// Draw a rectangle, will be used to draw paddles
-function drawRect(x, y, w, h, color) {
-    context.fillStyle = color;
-    context.fillRect(x, y, w, h);
-    displayCode(`drawRect(${x}, ${y}, ${w}, ${h}, '${color}');`);
+// ── Glow helpers ──────────────────────────────────────────────────────────────
+function setGlow(color, blur) {
+    context.shadowColor = color;
+    context.shadowBlur  = blur;
+}
+function clearGlow() {
+    context.shadowColor = 'transparent';
+    context.shadowBlur  = 0;
 }
 
-// Draw a circle, will be used to draw the ball
-function drawCircle(x, y, r, color) {
+// ── Drawing functions ─────────────────────────────────────────────────────────
+
+// Draw a paddle with rounded corners and neon glow
+function drawPaddle(x, y, w, h, color, glowColor) {
+    setGlow(glowColor, 22);
     context.fillStyle = color;
     context.beginPath();
-    context.arc(x, y, r, 0, Math.PI * 2, false);
-    context.closePath();
+    context.roundRect(x, y, w, h, [5]);
     context.fill();
-    displayCode(`drawCircle(${x}, ${y}, ${r}, '${color}');`);
+    clearGlow();
+    displayCode(`drawPaddle(${Math.round(x)}, ${Math.round(y)}, '${color}');`);
 }
 
-// Draw the net
+// Draw the ball with trail and radial gradient glow
+function drawBall(x, y, r) {
+    // Draw trail
+    trail.forEach((p, i) => {
+        context.globalAlpha = (i / trail.length) * 0.3;
+        context.fillStyle   = BALL_COLOR;
+        context.beginPath();
+        context.arc(p.x, p.y, r * 0.55 * (i / trail.length), 0, Math.PI * 2);
+        context.fill();
+    });
+    context.globalAlpha = 1;
+
+    // Draw ball with radial gradient + glow
+    setGlow(BALL_GLOW, 28);
+    const grad = context.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(1, BALL_COLOR);
+    context.fillStyle = grad;
+    context.beginPath();
+    context.arc(x, y, r, 0, Math.PI * 2);
+    context.fill();
+    clearGlow();
+
+    displayCode(`drawBall(${Math.round(x)}, ${Math.round(y)}, ${r});`);
+}
+
+// Draw the center net
 function drawNet() {
-    for (let i = 0; i <= canvas.height; i += 15) {
-        drawRect(canvas.width / 2 - 1, i, 2, 10, 'WHITE');
+    for (let i = 0; i <= canvas.height; i += 20) {
+        context.fillStyle = NET_COLOR;
+        context.fillRect(canvas.width / 2 - 1, i, 2, 10);
     }
     displayCode(`drawNet();`);
 }
 
-// Draw text
+// Draw score text with glow
 function drawText(text, x, y, color) {
-    context.fillStyle = color;
-    context.font = '45px Arial';
+    setGlow(color, 18);
+    context.fillStyle  = color;
+    context.font       = 'bold 52px "Courier New", monospace';
+    context.textAlign  = 'center';
     context.fillText(text, x, y);
-    displayCode(`drawText('${text}', ${x}, ${y}, '${color}');`);
+    clearGlow();
+    displayCode(`drawText('${text}', ${Math.round(x)}, ${Math.round(y)});`);
 }
 
-// Control the user paddle with mouse
+// ── Input handling ─────────────────────────────────────────────────────────────
+
 canvas.addEventListener('mousemove', movePaddle);
 function movePaddle(evt) {
     let rect = canvas.getBoundingClientRect();
-    user.y = evt.clientY - rect.top - user.height / 2;
+    const rawY = evt.clientY - rect.top - user.height / 2;
+    user.y = Math.max(0, Math.min(canvas.height - user.height, rawY));
     displayCode(`movePaddle(evt);`);
 }
 
-// Control the user paddle with touch
 canvas.addEventListener('touchmove', movePaddleTouch);
 function movePaddleTouch(evt) {
-    evt.preventDefault(); // Prevent scrolling when touching
-    let rect = canvas.getBoundingClientRect();
-    let touch = evt.touches[0]; // Get the first touch point
-    user.y = touch.clientY - rect.top - user.height / 2;
+    evt.preventDefault();
+    let rect  = canvas.getBoundingClientRect();
+    let touch = evt.touches[0];
+    const rawY = touch.clientY - rect.top - user.height / 2;
+    user.y = Math.max(0, Math.min(canvas.height - user.height, rawY));
     displayCode(`movePaddleTouch(evt);`);
 }
 
-// Collision detection
+// ── Collision detection ───────────────────────────────────────────────────────
 function collision(b, p) {
-    p.top = p.y;
+    p.top    = p.y;
     p.bottom = p.y + p.height;
-    p.left = p.x;
-    p.right = p.x + p.width;
+    p.left   = p.x;
+    p.right  = p.x + p.width;
 
-    b.top = b.y - b.radius;
+    b.top    = b.y - b.radius;
     b.bottom = b.y + b.radius;
-    b.left = b.x - b.radius;
-    b.right = b.x + b.radius;
+    b.left   = b.x - b.radius;
+    b.right  = b.x + b.radius;
 
     const isColliding = p.left < b.right && p.top < b.bottom && p.right > b.left && p.bottom > b.top;
     displayCode(`collision(ball, paddle) => ${isColliding}`);
     return isColliding;
 }
 
-// Reset the ball
+// ── Reset ball ────────────────────────────────────────────────────────────────
 function resetBall() {
-    ball.x = canvas.width / 2;
+    ball.x = canvas.width  / 2;
     ball.y = canvas.height / 2;
     ball.speed = 5;
-    ball.velocityX = -ball.velocityX;
-    displayCode(`resetBall();`);
+    // Serve toward whoever just scored; random angle −30° to +30°
+    const dir   = ball.velocityX > 0 ? -1 : 1;
+    const angle = (Math.random() * 60 - 30) * (Math.PI / 180);
+    ball.velocityX = dir * ball.speed * Math.cos(angle);
+    ball.velocityY = ball.speed * Math.sin(angle);
+    trail.length = 0; // clear trail on reset
+    displayCode(`resetBall(); // speed reset to ${ball.speed}`);
 }
 
-// Update: position, movement, score...
+// ── Game update ───────────────────────────────────────────────────────────────
 function update() {
-    // Update the score
+    // Scoring
     if (ball.x - ball.radius < 0) {
         com.score++;
         resetBall();
@@ -168,69 +229,68 @@ function update() {
         resetBall();
     }
 
+    // Record trail position before moving
+    trail.push({ x: ball.x, y: ball.y });
+    if (trail.length > TRAIL_LENGTH) trail.shift();
+
     // Ball movement
     ball.x += ball.velocityX;
     ball.y += ball.velocityY;
-    displayCode(`ball.x += ${ball.velocityX}; ball.y += ${ball.velocityY};`);
+    displayCode(`ball.x += ${ball.velocityX.toFixed(1)}; ball.y += ${ball.velocityY.toFixed(1)};`);
 
-    // Simple AI to control the computer paddle
+    // AI paddle
     com.y += ((ball.y - (com.y + com.height / 2))) * 0.1;
     displayCode(`com.y += ((ball.y - (com.y + com.height / 2))) * 0.1;`);
 
-    // When the ball collides with bottom and top walls, we inverse the y velocity
+    // Wall bounce
     if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
         ball.velocityY = -ball.velocityY;
         displayCode(`ball.velocityY = -ball.velocityY;`);
     }
 
-    // Check if the paddle hit the user or computer paddle
+    // Paddle collision
     let player = (ball.x + ball.radius < canvas.width / 2) ? user : com;
 
     if (collision(ball, player)) {
-        // Play hit sound
-        hitSound.currentTime = 0; // Rewind the sound to the start
+        hitSound.currentTime = 0;
         hitSound.play();
         displayCode(`hitSound.play();`);
 
-        // We check where the ball hit the paddle
         let collidePoint = (ball.y - (player.y + player.height / 2));
-        // Normalize the value
-        collidePoint = collidePoint / (player.height / 2);
-        // When the ball hits the paddle, we want the ball to take a different angle
-        let angleRad = (Math.PI / 4) * collidePoint;
+        collidePoint     = collidePoint / (player.height / 2);
+        let angleRad     = (Math.PI / 4) * collidePoint;
 
-        // Change the X and Y velocity direction
-        let direction = (ball.x + ball.radius < canvas.width / 2) ? 1 : -1;
+        let direction  = (ball.x + ball.radius < canvas.width / 2) ? 1 : -1;
         ball.velocityX = direction * ball.speed * Math.cos(angleRad);
         ball.velocityY = ball.speed * Math.sin(angleRad);
 
-        // Speed up the ball every time a paddle hits it
-        ball.speed += 0.5;
-        displayCode(`ball.speed += 0.5;`);
+        // Speed up — capped at 15 to keep the game playable
+        ball.speed = Math.min(ball.speed + 0.5, 15);
+        displayCode(`ball.speed = ${ball.speed.toFixed(1)}; // capped at 15`);
     }
 }
 
-// Render the game
+// ── Render ────────────────────────────────────────────────────────────────────
 function render() {
-    // Clear the canvas
-    drawRect(0, 0, canvas.width, canvas.height, 'BLACK');
+    // Gradient background
+    const bg = context.createLinearGradient(0, 0, 0, canvas.height);
+    bg.addColorStop(0, '#0d0b1e');
+    bg.addColorStop(1, '#130e2a');
+    context.fillStyle = bg;
+    context.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw the net
     drawNet();
 
-    // Draw the score
-    drawText(user.score, canvas.width / 4, canvas.height / 5, 'WHITE');
-    drawText(com.score, 3 * canvas.width / 4, canvas.height / 5, 'WHITE');
+    drawText(user.score, canvas.width / 4,     canvas.height / 5, SCORE_COLOR);
+    drawText(com.score,  3 * canvas.width / 4, canvas.height / 5, SCORE_COLOR);
 
-    // Draw the paddles
-    drawRect(user.x, user.y, user.width, user.height, user.color);
-    drawRect(com.x, com.y, com.width, com.height, com.color);
+    drawPaddle(user.x, user.y, user.width, user.height, PLAYER_COLOR, PLAYER_GLOW);
+    drawPaddle(com.x,  com.y,  com.width,  com.height,  AI_COLOR,     AI_GLOW);
 
-    // Draw the ball
-    drawCircle(ball.x, ball.y, ball.radius, ball.color);
+    drawBall(ball.x, ball.y, ball.radius);
 }
 
-// Game loop
+// ── Game loop ─────────────────────────────────────────────────────────────────
 function game() {
     update();
     render();
@@ -239,10 +299,7 @@ function game() {
 
 // Start the game when the start button is clicked
 startButton.addEventListener('click', () => {
-    // Hide the start button
     startButton.style.display = 'none';
-
-    // Call the game function 50 times every 1 second
     gameInterval = setInterval(game, 1000 / 50);
     displayCode("setInterval(game, 1000 / 50);");
 });
