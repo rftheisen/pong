@@ -51,21 +51,35 @@ const trail = [];
 const TRAIL_LENGTH = 8;
 
 // ── Canvas sizing ─────────────────────────────────────────────────────────────
-const CODE_PANEL_W = 300; // must match #code-container width in CSS
+const CODE_PANEL_W = 300; // desktop: sidebar width  — must match #code-container width in CSS
+const CODE_PANEL_H = 130; // mobile:  strip height   — must match @media height in CSS
 
 function setCanvasDimensions() {
-    let aspectRatio = 2;
-    let height = window.innerHeight * 0.85;
-    let width = height * aspectRatio;
+    const isMobile = window.innerWidth <= 768;
+    const aspectRatio = 2;
+    let width, height;
 
-    // Cap width to available space (viewport minus the code panel)
-    const maxW = (window.innerWidth - CODE_PANEL_W) * 0.97;
-    if (width > maxW) {
-        width = maxW;
+    if (isMobile) {
+        // Full-width canvas; code panel is a strip at the bottom
+        width  = window.innerWidth * 0.97;
         height = width / aspectRatio;
+        const maxH = (window.innerHeight - CODE_PANEL_H) * 0.95;
+        if (height > maxH) {
+            height = maxH;
+            width  = height * aspectRatio;
+        }
+    } else {
+        // Desktop: height-first, then cap to available width beside the sidebar
+        height = window.innerHeight * 0.85;
+        width  = height * aspectRatio;
+        const maxW = (window.innerWidth - CODE_PANEL_W) * 0.97;
+        if (width > maxW) {
+            width  = maxW;
+            height = width / aspectRatio;
+        }
     }
 
-    canvas.width = width;
+    canvas.width  = width;
     canvas.height = height;
 
     user.height = canvas.height / 5;
@@ -73,7 +87,7 @@ function setCanvasDimensions() {
     user.y = canvas.height / 2 - user.height / 2;
     com.y  = canvas.height / 2 - com.height  / 2;
     com.x  = canvas.width - com.width;
-    ball.x = canvas.width / 2;
+    ball.x = canvas.width  / 2;
     ball.y = canvas.height / 2;
 }
 

@@ -108,6 +108,47 @@
         #start-button:active {
             transform: translate(-50%, -50%) scale(0.98);
         }
+
+        /* ── Mobile layout (≤768px) ──────────────────────────────────────── */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+                justify-content: flex-start;
+                align-items: stretch;
+            }
+
+            #game-container {
+                flex: 1;
+                min-height: 0;
+            }
+
+            #code-container {
+                width: 100%;
+                min-width: unset;
+                height: 130px;
+                border-left: none;
+                border-top: 1px solid rgba(255, 255, 255, 0.08);
+                flex-shrink: 0;
+            }
+
+            #code-header {
+                padding: 8px 16px 6px;
+            }
+
+            #code-body {
+                padding: 8px 16px;
+            }
+
+            pre {
+                font-size: 12px;
+                line-height: 1.5;
+            }
+
+            #start-button {
+                font-size: 16px;
+                padding: 12px 28px;
+            }
+        }
     </style>
 </head>
 <body>
