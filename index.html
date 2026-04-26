@@ -15,7 +15,8 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: #0d0b1e;
+            background:
+                linear-gradient(180deg, #080a14 0%, #0d0b1e 56%, #12111f 100%);
             font-family: 'Courier New', monospace;
             overflow: hidden;
         }
@@ -28,9 +29,17 @@
             position: relative;
         }
 
+        #playfield {
+            position: relative;
+            display: flex;
+        }
+
         canvas {
             border-radius: 8px;
-            box-shadow: 0 0 40px rgba(129, 140, 248, 0.15), 0 0 80px rgba(129, 140, 248, 0.05);
+            box-shadow:
+                0 0 32px rgba(34, 211, 238, 0.08),
+                0 0 64px rgba(129, 140, 248, 0.12);
+            touch-action: none;
         }
 
         /* ── Code panel ────────────────────────────────────────────────── */
@@ -43,17 +52,17 @@
             background: rgba(255, 255, 255, 0.04);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            border-left: 1px solid rgba(148, 163, 184, 0.14);
             display: flex;
             flex-direction: column;
         }
 
         #code-header {
-            padding: 12px 16px 10px;
-            font-size: 11px;
-            letter-spacing: 0.08em;
-            color: rgba(255, 255, 255, 0.3);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 10px 16px 8px;
+            font-size: 10px;
+            letter-spacing: 0.11em;
+            color: rgba(255, 255, 255, 0.24);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.11);
             text-transform: uppercase;
             flex-shrink: 0;
         }
@@ -70,7 +79,7 @@
             word-wrap: break-word;
             font-size: 13px;
             line-height: 1.6;
-            color: rgba(255, 255, 255, 0.65);
+            color: rgba(255, 255, 255, 0.72);
         }
 
         /* Syntax highlighting */
@@ -84,29 +93,61 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            padding: 14px 36px;
+            min-width: 148px;
+            padding: 14px 32px;
             font-size: 18px;
             font-family: 'Courier New', monospace;
             letter-spacing: 0.06em;
-            background: rgba(129, 140, 248, 0.15);
+            background: rgba(15, 23, 42, 0.54);
             color: #fff;
-            border: 1px solid rgba(129, 140, 248, 0.5);
-            border-radius: 10px;
+            border: 1px solid rgba(129, 140, 248, 0.58);
+            border-radius: 8px;
             cursor: pointer;
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            box-shadow: 0 0 24px rgba(129, 140, 248, 0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+            box-shadow:
+                0 0 18px rgba(129, 140, 248, 0.28),
+                inset 0 1px 0 rgba(255,255,255,0.1);
             transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
         }
 
+        #start-button:focus-visible {
+            outline: 2px solid rgba(255, 255, 255, 0.85);
+            outline-offset: 4px;
+        }
+
         #start-button:hover {
-            background: rgba(129, 140, 248, 0.28);
-            box-shadow: 0 0 40px rgba(129, 140, 248, 0.55), inset 0 1px 0 rgba(255,255,255,0.15);
+            background: rgba(30, 41, 59, 0.72);
+            box-shadow:
+                0 0 30px rgba(129, 140, 248, 0.42),
+                0 0 16px rgba(34, 211, 238, 0.12),
+                inset 0 1px 0 rgba(255,255,255,0.15);
             transform: translate(-50%, -50%) scale(1.03);
         }
 
         #start-button:active {
             transform: translate(-50%, -50%) scale(0.98);
+        }
+
+        #match-message {
+            position: absolute;
+            top: calc(50% - 58px);
+            left: 50%;
+            transform: translate(-50%, -50%);
+            margin: 0;
+            min-width: min(280px, 80vw);
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.82);
+            text-shadow: 0 0 16px rgba(129, 140, 248, 0.48);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        #match-message.is-visible {
+            opacity: 1;
         }
 
         /* ── Mobile layout (≤768px) ──────────────────────────────────────── */
@@ -120,6 +161,9 @@
             #game-container {
                 flex: 1;
                 min-height: 0;
+                justify-content: flex-start;
+                align-items: flex-start;
+                padding-top: clamp(36px, 11vh, 96px);
             }
 
             #code-container {
@@ -127,7 +171,7 @@
                 min-width: unset;
                 height: 130px;
                 border-left: none;
-                border-top: 1px solid rgba(255, 255, 255, 0.08);
+                border-top: 1px solid rgba(148, 163, 184, 0.14);
                 flex-shrink: 0;
             }
 
@@ -146,15 +190,24 @@
 
             #start-button {
                 font-size: 16px;
-                padding: 12px 28px;
+                min-width: 120px;
+                padding: 12px 24px;
+            }
+
+            #match-message {
+                top: calc(50% - 52px);
+                font-size: 20px;
             }
         }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <canvas id="pong" width="800" height="400"></canvas>
-        <button id="start-button">▶ Start Game</button>
+        <div id="playfield">
+            <canvas id="pong" width="800" height="400" aria-label="Pong game canvas"></canvas>
+            <p id="match-message" aria-live="polite"></p>
+            <button id="start-button" aria-label="Start Pong game">▶ Play</button>
+        </div>
     </div>
     <div id="code-container">
         <div id="code-header">▶ Code running</div>
@@ -162,6 +215,6 @@
             <pre id="code-display"></pre>
         </div>
     </div>
-    <script src="game.js"></script>
+    <script src="game.js?v=20260426-3"></script>
 </body>
 </html>
