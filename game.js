@@ -71,8 +71,8 @@ const TRAIL_LENGTH = 8;
 
 // ── Canvas sizing ─────────────────────────────────────────────────────────────
 const CODE_PANEL_W = 300; // desktop: sidebar width  — must match #code-container width in CSS
-const CODE_PANEL_H = 130; // mobile:  strip height   — must match @media height in CSS
-const CODE_LOG_LIMIT = 8;
+const CODE_PANEL_H = 180; // mobile:  strip height   — must match @media height in CSS
+const CODE_LOG_LIMIT = 5;
 const codeLog = [];
 
 function clamp(value, min, max) {
@@ -129,7 +129,11 @@ function setCanvasDimensions() {
     com.x  = logicalWidth - com.width;
     ball.x = clamp(ball.x, ball.radius, logicalWidth - ball.radius);
     ball.y = clamp(ball.y, ball.radius, logicalHeight - ball.radius);
-    displayCode(`resizeCanvas(${Math.round(logicalWidth)}, ${Math.round(logicalHeight)});`);
+    displayCode(
+        `resizeCanvas(${Math.round(logicalWidth)}, ${Math.round(logicalHeight)});`,
+        'Responsive canvas',
+        'The game redraws itself when the browser size changes, so layout and game coordinates stay in sync.'
+    );
 }
 
 setCanvasDimensions();
@@ -149,15 +153,32 @@ function syntaxHighlight(code) {
         .replace(/'([^']*)'/g, "<span class='str'>'$1'</span>");
 }
 
-function displayCode(code) {
+function escapeHtml(text) {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function displayCode(code, concept = 'Code in motion', lesson = 'Small state changes add up to the animation you see on screen.') {
     if (!codeDisplay) return;
 
-    if (codeLog[codeLog.length - 1] !== code) {
-        codeLog.push(code);
+    const existingEntry = codeLog.find((entry) => entry.code === code && entry.concept === concept);
+    if (existingEntry) return;
+
+    const latest = codeLog[codeLog.length - 1];
+    if (!latest || latest.code !== code || latest.concept !== concept) {
+        codeLog.push({ code, concept, lesson });
         if (codeLog.length > CODE_LOG_LIMIT) codeLog.shift();
     }
 
-    codeDisplay.innerHTML = codeLog.map(syntaxHighlight).join('\n');
+    codeDisplay.innerHTML = codeLog.map((entry) => `
+        <section class="lesson-entry">
+            <strong class="lesson-concept">${escapeHtml(entry.concept)}</strong>
+            <code class="lesson-code">${syntaxHighlight(entry.code)}</code>
+            <p class="lesson-note">${escapeHtml(entry.lesson)}</p>
+        </section>
+    `).join('');
     const codeBody = codeDisplay.parentElement;
     if (codeBody) codeBody.scrollTop = codeBody.scrollHeight;
 }
@@ -242,7 +263,11 @@ function movePaddle(evt) {
     const pointerY = (evt.clientY - rect.top) * (logicalHeight / rect.height);
     const rawY = pointerY - user.height / 2;
     placePaddle(user, rawY);
-    displayCode(`movePaddle(evt);`);
+    displayCode(
+        `movePaddle(evt);`,
+        'Input events',
+        'The mouse position becomes a number, then clamp() keeps the paddle inside the playfield.'
+    );
 }
 
 canvas.addEventListener('touchmove', movePaddleTouch, { passive: false });
@@ -253,14 +278,22 @@ function movePaddleTouch(evt) {
     const pointerY = (touch.clientY - rect.top) * (logicalHeight / rect.height);
     const rawY = pointerY - user.height / 2;
     placePaddle(user, rawY);
-    displayCode(`movePaddleTouch(evt);`);
+    displayCode(
+        `movePaddleTouch(evt);`,
+        'Touch input',
+        'Touch screens send different events, but the game converts them into the same paddle movement.'
+    );
 }
 
 window.addEventListener('keydown', (evt) => {
     if (Object.prototype.hasOwnProperty.call(keys, evt.key)) {
         keys[evt.key] = true;
         evt.preventDefault();
-        displayCode(`keys['${evt.key}'] = true;`);
+        displayCode(
+            `keys['${evt.key}'] = true;`,
+            'Keyboard state',
+            'A keydown event flips a boolean. The game loop reads that boolean every frame.'
+        );
     }
 });
 
@@ -284,7 +317,13 @@ function collision(b, p) {
     b.right  = b.x + b.radius;
 
     const isColliding = p.left < b.right && p.top < b.bottom && p.right > b.left && p.bottom > b.top;
-    displayCode(`collision(ball, paddle) => ${isColliding}`);
+    if (isColliding) {
+        displayCode(
+            `collision(ball, paddle) => true`,
+            'Collision detection',
+            'The game checks whether two rectangles overlap. That simple test powers the paddle hit.'
+        );
+    }
     return isColliding;
 }
 
@@ -299,7 +338,11 @@ function resetBall() {
     ball.velocityX = dir * ball.speed * Math.cos(angle);
     ball.velocityY = ball.speed * Math.sin(angle);
     trail.length = 0; // clear trail on reset
-    displayCode(`resetBall(); // speed reset to ${Math.round(ball.speed)}`);
+    displayCode(
+        `resetBall(); // speed reset to ${Math.round(ball.speed)}`,
+        'Reset state',
+        'After a point, the ball returns to the center and starts again at a fair speed.'
+    );
 }
 
 function resetMatch() {
@@ -310,7 +353,11 @@ function resetMatch() {
     ball.velocityX = BASE_BALL_SPEED;
     resetBall();
     setMatchMessage('');
-    displayCode(`resetMatch(); // first to ${WINNING_SCORE}`);
+    displayCode(
+        `resetMatch(); // first to ${WINNING_SCORE}`,
+        'Match state',
+        'A replay clears scores and puts every object back into a known starting state.'
+    );
 }
 
 function endMatch(winner) {
@@ -324,12 +371,21 @@ function endMatch(winner) {
     startButton.textContent = '↻ Play Again';
     startButton.setAttribute('aria-label', 'Play Pong again');
     startButton.style.display = 'block';
-    displayCode(`${winner === user ? 'user' : 'com'}.score === ${WINNING_SCORE};`);
+    displayCode(
+        `${winner === user ? 'user' : 'com'}.score === ${WINNING_SCORE};`,
+        'Win condition',
+        'Games need an ending rule. Here, reaching 21 switches the match out of the playing state.'
+    );
     render();
 }
 
 function scorePoint(player) {
     player.score++;
+    displayCode(
+        `${player === user ? 'user' : 'com'}.score++;`,
+        'Scoring',
+        'Scores are stored as state. Drawing reads that state and shows the new number.'
+    );
 
     if (player.score >= WINNING_SCORE) {
         endMatch(player);
@@ -378,11 +434,19 @@ function update(deltaTime) {
     if (ball.y - ball.radius < 0) {
         ball.y = ball.radius;
         ball.velocityY = Math.abs(ball.velocityY);
-        displayCode(`ball.velocityY = Math.abs(ball.velocityY);`);
+        displayCode(
+            `ball.velocityY = Math.abs(ball.velocityY);`,
+            'Bounce physics',
+            'Changing the sign of velocity makes the ball reverse direction after hitting a wall.'
+        );
     } else if (ball.y + ball.radius > logicalHeight) {
         ball.y = logicalHeight - ball.radius;
         ball.velocityY = -Math.abs(ball.velocityY);
-        displayCode(`ball.velocityY = -ball.velocityY;`);
+        displayCode(
+            `ball.velocityY = -Math.abs(ball.velocityY);`,
+            'Bounce physics',
+            'Velocity is speed with direction. Negative Y sends the ball back upward.'
+        );
     }
 
     // Paddle collision
@@ -400,7 +464,11 @@ function update(deltaTime) {
     if (collision(ball, player) || (crossedPaddle && verticalOverlap)) {
         hitSound.currentTime = 0;
         hitSound.play().catch(() => {});
-        displayCode(`hitSound.play();`);
+        displayCode(
+            `hitSound.play();`,
+            'Feedback',
+            'Sound gives the player immediate feedback that the game detected a hit.'
+        );
 
         let collidePoint = (ball.y - (player.y + player.height / 2));
         collidePoint     = clamp(collidePoint / (player.height / 2), -1, 1);
@@ -412,7 +480,11 @@ function update(deltaTime) {
         ball.velocityY = ball.speed * Math.sin(angleRad);
 
         ball.speed = Math.min(ball.speed + SPEED_STEP, MAX_BALL_SPEED);
-        displayCode(`ball.speed = ${Math.round(ball.speed)}; // capped`);
+        displayCode(
+            `ball.speed = ${Math.round(ball.speed)}; // capped`,
+            'Difficulty ramp',
+            'Each rally gets faster, but Math.min() caps the speed so the game stays playable.'
+        );
     }
 }
 
@@ -466,8 +538,16 @@ startButton.addEventListener('click', () => {
     startButton.style.display = 'none';
     lastFrameTime = performance.now();
     animationFrameId = requestAnimationFrame(game);
-    displayCode("requestAnimationFrame(game);");
+    displayCode(
+        'requestAnimationFrame(game);',
+        'Animation loop',
+        'The browser calls game() before each repaint. Update state, draw, repeat.'
+    );
 });
 
 render();
-displayCode("Click Play, then move with mouse, touch, W/S, or ↑/↓.");
+displayCode(
+    `const WINNING_SCORE = ${WINNING_SCORE};`,
+    'Lesson goal',
+    'Pong teaches core web ideas: input, state, animation loops, collision, and win conditions.'
+);
